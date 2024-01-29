@@ -1,0 +1,12 @@
+Source: ros-rolling-motion-capture-tracking
+Section: misc
+Priority: optional
+Maintainer: Wolfgang Hönig <hoenig@tu-berlin.de>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, libpcl-dev, ros-rolling-ament-cmake, ros-rolling-ament-lint-auto <!nocheck>, ros-rolling-ament-lint-common <!nocheck>, ros-rolling-eigen3-cmake-module, ros-rolling-motion-capture-tracking-interfaces, ros-rolling-rclcpp, ros-rolling-sensor-msgs, ros-rolling-tf2-ros, ros-rolling-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-rolling-motion-capture-tracking
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libeigen3-dev, libpcl-dev, ros-rolling-eigen3-cmake-module, ros-rolling-motion-capture-tracking-interfaces, ros-rolling-rclcpp, ros-rolling-sensor-msgs, ros-rolling-tf2-ros, ros-rolling-ros-workspace
+Description: ROS Package for different motion capture systems, including custom rigid body tracking support
