@@ -1,0 +1,20 @@
+ros-rolling-motion-capture-tracking (1.0.3-2noble) noble; urgency=high
+
+
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Mon, 29 Jan 2024 00:00:00 -0000
+
+ros-rolling-motion-capture-tracking (1.0.2-2noble) noble; urgency=high
+
+
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Tue, 23 Jan 2024 00:00:00 -0000
+
+ros-rolling-motion-capture-tracking (1.0.1-2noble) noble; urgency=high
+
+  * initial release
+  * Contributors: Wolfgang Hönig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Sat, 20 Jan 2024 00:00:00 -0000
+
+
