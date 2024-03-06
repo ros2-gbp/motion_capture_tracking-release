@@ -1,0 +1,22 @@
+ros-rolling-motion-capture-tracking-interfaces (1.0.3-2noble) noble; urgency=high
+
+  * add ament_lint_common test dependency
+  * Contributors: Wolfgang Hoenig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Mon, 29 Jan 2024 00:00:00 -0000
+
+ros-rolling-motion-capture-tracking-interfaces (1.0.2-2noble) noble; urgency=high
+
+  * fix package dependencies in package.xml
+  * Contributors: Wolfgang Hoenig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Tue, 23 Jan 2024 00:00:00 -0000
+
+ros-rolling-motion-capture-tracking-interfaces (1.0.1-2noble) noble; urgency=high
+
+  * initial motion_capture_tracking_interfaces package
+  * Contributors: Wolfgang Hoenig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Sat, 20 Jan 2024 00:00:00 -0000
+
+
