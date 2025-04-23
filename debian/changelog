@@ -1,0 +1,22 @@
+ros-kilted-motion-capture-tracking-interfaces (1.0.3-3bookworm) bookworm; urgency=high
+
+  * add ament_lint_common test dependency
+  * Contributors: Wolfgang Hoenig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Mon, 29 Jan 2024 06:00:00 -0000
+
+ros-kilted-motion-capture-tracking-interfaces (1.0.2-3bookworm) bookworm; urgency=high
+
+  * fix package dependencies in package.xml
+  * Contributors: Wolfgang Hoenig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Tue, 23 Jan 2024 06:00:00 -0000
+
+ros-kilted-motion-capture-tracking-interfaces (1.0.1-3bookworm) bookworm; urgency=high
+
+  * initial motion_capture_tracking_interfaces package
+  * Contributors: Wolfgang Hoenig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Sat, 20 Jan 2024 06:00:00 -0000
+
+
