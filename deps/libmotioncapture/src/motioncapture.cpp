@@ -21,6 +21,9 @@
 #ifdef ENABLE_MOTIONANALYSIS
 #include "libmotioncapture/motionanalysis.h"
 #endif
+#ifdef ENABLE_FZMOTION
+#include "libmotioncapture/fzmotion.h"
+#endif
 
 namespace libmotioncapture {
 
@@ -210,6 +213,16 @@ namespace libmotioncapture {
     {
       mocap = new libmotioncapture::MotionCaptureMotionAnalysis(
         getString(cfg, "hostname", "localhost"));
+    }
+#endif
+#ifdef ENABLE_FZMOTION
+    else if (type == "fzmotion")
+    {
+      mocap = libmotioncapture::MotionCaptureFZMotion::getInstance(
+        getString(cfg, "local_IP", "0.0.0.0"),
+        getInt(cfg, "local_port", 9762),
+        getString(cfg, "hostname", "fzmotion"),
+        getInt(cfg, "remote_port", 9761));
     }
 #endif
     else

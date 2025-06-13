@@ -1,18 +1,21 @@
+[![CMake](https://github.com/whoenig/NatNetSDKCrossplatform/actions/workflows/cmake.yml/badge.svg)](https://github.com/whoenig/NatNetSDKCrossplatform/actions/workflows/cmake.yml)
+
+
 # NatNetSDKCrossplatform
 
 This repository contains the NatNet SDK to receive data from an OptiTrack Motion Capture system. The SDK can be found at https://optitrack.com/products/natnet-sdk/.
 
 This code contains two versions:
 
-1. The direct depacketization method, which is fully open-source. The PacketClient helper was taken from this SDK (version 4.0, Windows). The portions of the SDK that have been used and are part of this repository are licensed under Apache License, Version 2.0. The remaining code is licensed under MIT. This uses boost asio for communication.
+1. The direct depacketization method, which is fully open-source. The PacketClient helper was taken from this SDK (version 4.1.0, Windows). The portions of the SDK that have been used and are part of this repository are licensed under Apache License, Version 2.0. The remaining code is licensed under MIT. This uses boost asio for communication.
 
 2. The official SDK, in its binary distribution.
 
 ## Layout
 
-`include`: Official include files from NaturalPoint
-`samples`: Official samples (PacketClient from the Windows version of the SDK) and SampleClient from the Linux version
-`src`: The actual source code of the crossplatform port, based on the depacketization method.
+- `include`: Official include files from NaturalPoint
+- `samples`: Official samples (PacketClient from the Windows version of the SDK) and SampleClient from the Linux version
+- `src`: The actual source code of the crossplatform port, based on the depacketization method.
 
 ## Build
 
@@ -37,6 +40,12 @@ Test the closed-source version:
 
 ```
 ./sampleClient
+```
+
+or
+
+```
+./minimalClient
 ```
 
 ## Notes
