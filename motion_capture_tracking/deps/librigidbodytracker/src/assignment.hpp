@@ -150,11 +150,14 @@ class Assignment {
 
  protected:
   void addOrUpdateEdge(vertex_t from, vertex_t to, long cost) {
+    // check if there is an edge in graph
     auto e = boost::edge(from, to, m_graph);
     if (e.second) {
+      // found edge -> update cost
       m_graph[e.first].cost = cost;
       m_graph[m_graph[e.first].reverseEdge].cost = -cost;
     } else {
+      // no edge in graph yet
       auto e1 = boost::add_edge(from, to, m_graph);
       m_graph[e1.first].cost = cost;
       m_graph[e1.first].capacity = 1;
