@@ -5,6 +5,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -15,6 +17,7 @@ find_package(motion_capture_tracking_interfaces REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
+find_package(fmt REQUIRED)
 
 # add dependencies
 add_subdirectory(deps/librigidbodytracker EXCLUDE_FROM_ALL)
@@ -23,7 +26,7 @@ set(LIBMOTIONCAPTURE_BUILD_EXAMPLE OFF)
 
 set(LIBMOTIONCAPTURE_ENABLE_QUALISYS ON)
 set(LIBMOTIONCAPTURE_ENABLE_OPTITRACK ON)
-set(LIBMOTIONCAPTURE_ENABLE_OPTITRACK_CLOSED_SOURCE ON)
+set(LIBMOTIONCAPTURE_ENABLE_OPTITRACK_CLOSED_SOURCE OFF)
 set(LIBMOTIONCAPTURE_ENABLE_VICON ON)
 set(LIBMOTIONCAPTURE_ENABLE_VRPN ON)
 set(LIBMOTIONCAPTURE_ENABLE_FZMOTION ON)
@@ -53,12 +56,13 @@ add_executable(motion_capture_tracking_node
 target_link_libraries(motion_capture_tracking_node
   librigidbodytracker
   libmotioncapture
+  fmt::fmt
 )
-ament_target_dependencies(motion_capture_tracking_node
-  rclcpp
-  tf2_ros
-  sensor_msgs
-  motion_capture_tracking_interfaces
+target_link_libraries(motion_capture_tracking_node
+  rclcpp::rclcpp
+  tf2_ros::tf2_ros
+  ${sensor_msgs_TARGETS}
+  ${motion_capture_tracking_interfaces_TARGETS}
 )
 target_include_directories(motion_capture_tracking_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -67,6 +71,14 @@ target_compile_features(motion_capture_tracking_node PUBLIC c_std_99 cxx_std_17)
 
 install(TARGETS motion_capture_tracking_node
   DESTINATION lib/${PROJECT_NAME})
+
+# The precompiled libNatNet library is only available for x64 Linux
+if ((CMAKE_SYSTEM_NAME STREQUAL "Linux") AND (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64"))
+  install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/libmotioncapture/deps/NatNetSDKCrossplatform/lib/ubuntu/libNatNet.so
+    DESTINATION lib/${PROJECT_NAME}
+  )
+endif()
 
 # if(BUILD_TESTING)
 #   find_package(ament_lint_auto REQUIRED)
