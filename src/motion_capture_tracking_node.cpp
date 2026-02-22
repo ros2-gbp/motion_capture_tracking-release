@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <fmt/core.h>
 
 // ROS
 #include <rclcpp/rclcpp.hpp>
@@ -55,15 +56,24 @@ int main(int argc, char **argv)
   auto node = rclcpp::Node::make_shared("motion_capture_tracking_node");
   node->declare_parameter<std::string>("type", "vicon");
   node->declare_parameter<std::string>("hostname", "localhost");
+  node->declare_parameter<std::string>("topics.frame_id", "world");
   node->declare_parameter<std::string>("topics.poses.qos.mode", "none");
   node->declare_parameter<double>("topics.poses.qos.deadline", 100.0);
+  node->declare_parameter<std::string>("topics.tf.child_frame_id", "{}");
+
   node->declare_parameter<std::string>("logfilepath", "");
 
   std::string motionCaptureType = node->get_parameter("type").as_string();
   std::string motionCaptureHostname = node->get_parameter("hostname").as_string();
+  std::string frame_id = node->get_parameter("topics.frame_id").as_string();
   std::string poses_qos = node->get_parameter("topics.poses.qos.mode").as_string();
   double poses_deadline = node->get_parameter("topics.poses.qos.deadline").as_double();
+  std::string tf_child_frame_id = node->get_parameter("topics.tf.child_frame_id").as_string();
   std::string logFilePath = node->get_parameter("logfilepath").as_string();
+
+  auto node_parameters_iface = node->get_node_parameters_interface();
+  const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
+      node_parameters_iface->get_parameter_overrides();
 
   librigidbodytracker::PointCloudLogger pointCloudLogger(logFilePath);
   const bool logClouds = !logFilePath.empty();
@@ -72,13 +82,24 @@ int main(int argc, char **argv)
   // Make a new client
   std::map<std::string, std::string> cfg;
   cfg["hostname"] = motionCaptureHostname;
+
+  // if the mock type is selected, add the defined rigid bodies
+  if (motionCaptureType == "mock") {
+    auto rigid_body_names = extract_names(parameter_overrides, "rigid_bodies");
+    for (const auto &name : rigid_body_names)
+    {
+      const auto pos = get_vec(parameter_overrides.at("rigid_bodies." + name + ".initial_position"));
+      cfg["rigid_bodies"] += name + "(" + std::to_string(pos[0]) + "," + std::to_string(pos[1]) + "," + std::to_string(pos[2]) +",1,0,0,0);";
+    }
+  }
+
   libmotioncapture::MotionCapture *mocap = libmotioncapture::MotionCapture::connect(motionCaptureType, cfg);
 
   // prepare point cloud publisher
   auto pubPointCloud = node->create_publisher<sensor_msgs::msg::PointCloud2>("pointCloud", 1);
 
   sensor_msgs::msg::PointCloud2 msgPointCloud;
-  msgPointCloud.header.frame_id = "world";
+  msgPointCloud.header.frame_id = frame_id;
   msgPointCloud.height = 1;
 
   sensor_msgs::msg::PointField field;
@@ -111,14 +132,9 @@ int main(int argc, char **argv)
   }
 
   motion_capture_tracking_interfaces::msg::NamedPoseArray msgPoses;
-  msgPoses.header.frame_id = "world";
+  msgPoses.header.frame_id = frame_id;
 
   // prepare rigid body tracker
-
-  auto node_parameters_iface = node->get_node_parameters_interface();
-  const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
-      node_parameters_iface->get_parameter_overrides();
-
 
   auto dynamics_config_names = extract_names(parameter_overrides, "dynamics_configurations");
   std::vector<librigidbodytracker::DynamicsConfiguration> dynamicsConfigurations(dynamics_config_names.size());
@@ -160,17 +176,20 @@ int main(int argc, char **argv)
     ++i;
   }
 
-  auto rigid_body_names = extract_names(parameter_overrides, "rigid_bodies");
   std::vector<librigidbodytracker::RigidBody> rigidBodies;
-  for (const auto &name : rigid_body_names)
-  {
-    const auto pos = get_vec(parameter_overrides.at("rigid_bodies." + name + ".initial_position"));
-    Eigen::Affine3f m;
-    m = Eigen::Translation3f(pos[0], pos[1], pos[2]);
-    const auto marker = parameter_overrides.at("rigid_bodies." + name + ".marker").get<std::string>();
-    const auto dynamics = parameter_overrides.at("rigid_bodies." + name + ".dynamics").get<std::string>();
+  // only add the rigid bodies to the tracker if we are not using the "mock" mode
+  if (motionCaptureType != "mock") {
+    auto rigid_body_names = extract_names(parameter_overrides, "rigid_bodies");
+    for (const auto &name : rigid_body_names)
+    {
+      const auto pos = get_vec(parameter_overrides.at("rigid_bodies." + name + ".initial_position"));
+      Eigen::Affine3f m;
+      m = Eigen::Translation3f(pos[0], pos[1], pos[2]);
+      const auto marker = parameter_overrides.at("rigid_bodies." + name + ".marker").get<std::string>();
+      const auto dynamics = parameter_overrides.at("rigid_bodies." + name + ".dynamics").get<std::string>();
 
-    rigidBodies.push_back(librigidbodytracker::RigidBody(marker_name_to_index.at(marker), dynamics_name_to_index.at(dynamics), m, name));
+      rigidBodies.push_back(librigidbodytracker::RigidBody(marker_name_to_index.at(marker), dynamics_name_to_index.at(dynamics), m, name));
+    }
   }
 
   librigidbodytracker::RigidBodyTracker tracker(
@@ -228,7 +247,7 @@ int main(int argc, char **argv)
       // transforms.emplace_back(eigenToTransform(transform));
       transforms.resize(transforms.size() + 1);
       transforms.back().header.stamp = time;
-      transforms.back().header.frame_id = "world";
+      transforms.back().header.frame_id = frame_id;
       transforms.back().child_frame_id = rigidBody.name();
       transforms.back().transform.translation.x = rigidBody.position().x();
       transforms.back().transform.translation.y = rigidBody.position().y();
@@ -249,7 +268,7 @@ int main(int argc, char **argv)
 
         transforms.resize(transforms.size() + 1);
         transforms.back().header.stamp = time;
-        transforms.back().header.frame_id = "world";
+        transforms.back().header.frame_id = frame_id;
         transforms.back().child_frame_id = rigidBody.name();
         transforms.back().transform.translation.x = translation.x();
         transforms.back().transform.translation.y = translation.y();
@@ -275,7 +294,7 @@ int main(int argc, char **argv)
 
     if (transforms.size() > 0) {
       // publish poses
-      msgPointCloud.header.stamp = time;
+      msgPoses.header.stamp = time;
       msgPoses.poses.resize(transforms.size());
       for (size_t i = 0; i < transforms.size(); ++i) {
         msgPoses.poses[i].name = transforms[i].child_frame_id;
@@ -286,7 +305,9 @@ int main(int argc, char **argv)
       }
       pubPoses->publish(msgPoses);
 
-      // send TF. Since RViz and others can't handle nan's, report a fake oriention if needed
+      // send TF
+      
+      // Since RViz and others can't handle nan's, report a fake orientation if needed
       for (auto& tf : transforms) {
         if (std::isnan(tf.transform.rotation.x)) {
           tf.transform.rotation.x = 0;
@@ -294,6 +315,12 @@ int main(int argc, char **argv)
           tf.transform.rotation.z = 0;
           tf.transform.rotation.w = 1;
         }
+      }
+
+      // allow custom child_frame_ids before sending
+      for (auto& tf : transforms) {
+        std::string name = tf.child_frame_id;
+        tf.child_frame_id = fmt::format(tf_child_frame_id, name);
       }
 
       tfbroadcaster.sendTransform(transforms);
