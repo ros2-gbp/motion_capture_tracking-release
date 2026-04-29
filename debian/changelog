@@ -1,0 +1,52 @@
+ros-lyrical-motion-capture-tracking (1.0.6-3trixie) trixie; urgency=high
+
+  * disable optitrack_closed_source by default
+  * update librigidbodytracker (hybrid tracking)
+  * update libmotioncapture to 1.0a4
+  * add support for custom frame_id's
+  * Replace ament_target_dependencies with target_link_libraries
+  * Fix poses message not having a timestamp
+  * Contributors: Alejandro Hernandez Cordero, John TGZ, Wolfgang Hönig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Fri, 13 Jun 2025 00:00:00 -0000
+
+ros-lyrical-motion-capture-tracking (1.0.5-3trixie) trixie; urgency=high
+
+  * Install libNatNet.so only on x64 Linux
+    * Should fix ROS 2 build farm errors.
+  * Contributors: Wolfgang Hoenig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Tue, 12 Mar 2024 00:00:00 -0000
+
+ros-lyrical-motion-capture-tracking (1.0.4-3trixie) trixie; urgency=high
+
+  * install libNatNet.so as part of package
+    Fixes #14 <https://github.com/IMRCLab/motion_capture_tracking/issues/14>
+  * Add support for the "mock" motion capture type
+    In "mock" mode, the rigid bodies defined in the cfg.yaml will be published at a fixed rate. This is useful for testing without access to a motion capture system.
+  * cfg: remove unused "mode"
+    Mode is not being used in the code, and is therefore removed from the config.
+  * Contributors: Wolfgang Hoenig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Wed, 06 Mar 2024 00:00:00 -0000
+
+ros-lyrical-motion-capture-tracking (1.0.3-3trixie) trixie; urgency=high
+
+
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Mon, 29 Jan 2024 00:00:00 -0000
+
+ros-lyrical-motion-capture-tracking (1.0.2-3trixie) trixie; urgency=high
+
+
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Tue, 23 Jan 2024 00:00:00 -0000
+
+ros-lyrical-motion-capture-tracking (1.0.1-3trixie) trixie; urgency=high
+
+  * initial release
+  * Contributors: Wolfgang Hönig
+
+ -- Wolfgang Hönig <hoenig@tu-berlin.de>  Sat, 20 Jan 2024 00:00:00 -0000
+
+
