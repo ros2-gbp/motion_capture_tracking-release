@@ -1,0 +1,12 @@
+Source: ros-lyrical-motion-capture-tracking-interfaces
+Section: misc
+Priority: optional
+Maintainer: Wolfgang Hönig <hoenig@tu-berlin.de>
+Build-Depends: debhelper (>= 9.0.0), ros-lyrical-ament-cmake, ros-lyrical-ament-lint-common <!nocheck>, ros-lyrical-builtin-interfaces, ros-lyrical-geometry-msgs, ros-lyrical-rosidl-default-generators, ros-lyrical-std-msgs, ros-lyrical-ros-workspace, ros-lyrical-rosidl-typesupport-fastrtps-c, ros-lyrical-rosidl-typesupport-fastrtps-cpp
+Homepage: https://index.ros.org/p/motion_capture_tracking_interfaces/#lyrical
+Standards-Version: 3.9.2
+
+Package: ros-lyrical-motion-capture-tracking-interfaces
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-lyrical-builtin-interfaces, ros-lyrical-geometry-msgs, ros-lyrical-rosidl-default-runtime, ros-lyrical-std-msgs, ros-lyrical-ros-workspace
+Description: Interfaces for motion_capture_tracking package.
