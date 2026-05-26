@@ -2,6 +2,9 @@
 Changelog for package motion_capture_tracking
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.7 (2026-05-26)
+------------------
+
 1.0.6 (2025-06-13)
 ------------------
 * disable optitrack_closed_source by default 
