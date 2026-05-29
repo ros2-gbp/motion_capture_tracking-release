@@ -5,11 +5,11 @@ project(libmotioncapture)
 option(LIBMOTIONCAPTURE_BUILD_PYTHON_BINDINGS "Generate Python Bindings" ON)
 option(LIBMOTIONCAPTURE_ENABLE_QUALISYS "Enable Qualisys" ON)
 option(LIBMOTIONCAPTURE_ENABLE_OPTITRACK "Enable Optitrack" ON)
-option(LIBMOTIONCAPTURE_ENABLE_OPTITRACK_CLOSED_SOURCE "Enable Optitrack (Closed Source)" ON)
+option(LIBMOTIONCAPTURE_ENABLE_OPTITRACK_CLOSED_SOURCE "Enable Optitrack (Closed Source)" OFF)
 option(LIBMOTIONCAPTURE_ENABLE_VICON "Enable Vicon" ON)
 option(LIBMOTIONCAPTURE_ENABLE_NOKOV "Enable Nokov" OFF)
 option(LIBMOTIONCAPTURE_ENABLE_VRPN "Enable VRPN" ON)
-option(LIBMOTIONCAPTURE_ENABLE_FZMOTION "Enable FZMOTION" ON)
+option(LIBMOTIONCAPTURE_ENABLE_FZMOTION "Enable FZMOTION" OFF)
 option(LIBMOTIONCAPTURE_ENABLE_MOTIONANALYSIS "Enable MotionAnalysis" OFF)
 option(LIBMOTIONCAPTURE_BUILD_EXAMPLE "Enable Example application" ON)
 
@@ -18,7 +18,8 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Boost 1.5 COMPONENTS system REQUIRED) # for optitrack
+find_package(Threads REQUIRED)
+find_package(Boost) # for optitrack
 add_definitions(
   -DBOOST_DATE_TIME_NO_LIB
   -DBOOST_REGEX_NO_LIB
@@ -87,8 +88,15 @@ if (LIBMOTIONCAPTURE_ENABLE_OPTITRACK)
   )
   set(my_libraries
     ${my_libraries}
-    Boost::system
+    Boost::boost
+    Threads::Threads
   )
+  if (Boost_FOUND)
+    set(my_libraries
+      ${my_libraries}
+      Boost::boost
+    )
+  endif()
 endif()
 
 if (LIBMOTIONCAPTURE_ENABLE_OPTITRACK_CLOSED_SOURCE)
@@ -232,6 +240,7 @@ target_link_directories(libmotioncapture PUBLIC
   ${my_link_directories}
 )
 target_link_libraries(libmotioncapture
+  Eigen3::Eigen
   ${my_libraries}
 )
 set_property(TARGET libmotioncapture PROPERTY POSITION_INDEPENDENT_CODE ON)
