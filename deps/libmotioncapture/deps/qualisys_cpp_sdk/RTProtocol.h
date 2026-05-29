@@ -35,6 +35,7 @@ public:
     static const unsigned int cDefaultAutoDiscoverPort  = cDefaultBasePort + 4;
 
     static const unsigned int cWaitForDataTimeout        = 5000000;   // 5 s
+    static const unsigned int cWaitForSaveTimeout        = 30000000;  // 30 s
     static const unsigned int cWaitForCalibrationTimeout = 600000000; // 10 min
 
     static const unsigned int cComponent3d            = 0x000001;
@@ -78,33 +79,34 @@ public:
 
     enum ECameraModel
     {
-        ModelMacReflex       = 0,
-        ModelProReflex120    = 1,
-        ModelProReflex240    = 2,
-        ModelProReflex500    = 3,
-        ModelProReflex1000   = 4,
-        ModelOqus100         = 5,
-        ModelOqus300         = 6,
-        ModelOqus300Plus     = 7,
-        ModelOqus400         = 8,
-        ModelOqus500         = 9,
-        ModelOqus200C        = 10,
-        ModelOqus500Plus     = 11,
-        ModelOqus700         = 12,
-        ModelOqus700Plus     = 13,
-        ModelOqus600Plus     = 14,
-        ModelMiqusM1         = 15,
-        ModelMiqusM3         = 16,
-        ModelMiqusM5         = 17,
-        ModelMiqusSyncUnit   = 18,
-        ModelMiqusVideo      = 19,
-        ModelMiqusVideoColor = 20,
-        ModelMiqusHybrid     = 21,
-        ModelArqusA5         = 22,
-        ModelArqusA12        = 23,
-        ModelArqusA9         = 24,
-        ModelArqusA26         = 25,
-        ModelUnknown         = 26
+        ModelMacReflex           = 0,
+        ModelProReflex120        = 1,
+        ModelProReflex240        = 2,
+        ModelProReflex500        = 3,
+        ModelProReflex1000       = 4,
+        ModelOqus100             = 5,
+        ModelOqus300             = 6,
+        ModelOqus300Plus         = 7,
+        ModelOqus400             = 8,
+        ModelOqus500             = 9,
+        ModelOqus200C            = 10,
+        ModelOqus500Plus         = 11,
+        ModelOqus700             = 12,
+        ModelOqus700Plus         = 13,
+        ModelOqus600Plus         = 14,
+        ModelMiqusM1             = 15,
+        ModelMiqusM3             = 16,
+        ModelMiqusM5             = 17,
+        ModelMiqusSyncUnit       = 18,
+        ModelMiqusVideo          = 19,
+        ModelMiqusVideoColor     = 20,
+        ModelMiqusHybrid         = 21,
+        ModelArqusA5             = 22,
+        ModelArqusA12            = 23,
+        ModelArqusA9             = 24,
+        ModelArqusA26            = 25,
+        ModelMiqusVideoColorPlus = 26,
+        ModelUnknown             = 27
     };
 
     enum ECameraMode
@@ -116,11 +118,12 @@ public:
 
     enum EVideoResolution
     {
-        VideoResolution1080p = 0,
-        VideoResolution720p = 1,
-        VideoResolution540p = 2,
-        VideoResolution480p = 3,
-        VideoResolutionNone = 4
+        VideoResolution1440p = 0,
+        VideoResolution1080p = 1,
+        VideoResolution720p = 2,
+        VideoResolution540p = 3,
+        VideoResolution480p = 4,
+        VideoResolutionNone = 5
     };
 
     enum EVideoAspectRatio
@@ -390,6 +393,7 @@ public:
     struct SSettings6DOFBody
     {
         std::string           name;
+        bool                  enabled;
         uint32_t              color;
         std::string           filterPreset;
         float                 maxResidual;
@@ -703,7 +707,7 @@ public:
     bool       StopCapture();
     bool       Calibrate(const bool refine, SCalibration &calibrationResult, int timeout = cWaitForCalibrationTimeout);
     bool       LoadCapture(const char* pFileName);
-    bool       SaveCapture(const char* pFileName, bool bOverwrite, char* pNewFileName = nullptr, int nSizeOfNewFileName = 0);
+    bool       SaveCapture(const char* pFileName, bool bOverwrite, char* pNewFileName = nullptr, int nSizeOfNewFileName = 0, int nTimeout = cWaitForSaveTimeout); //Default timeout is 30 seconds
     bool       LoadProject(const char* pFileName);
     bool       Reprocess();
 
