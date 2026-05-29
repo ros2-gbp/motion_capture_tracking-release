@@ -1,3 +1,28 @@
+## motion_capture_tracking (rolling) - 1.0.8-1
+
+The packages in the `motion_capture_tracking` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling motion_capture_tracking` on `Fri, 29 May 2026 20:48:43 -0000`
+
+These packages were released:
+- `motion_capture_tracking`
+- `motion_capture_tracking_interfaces`
+
+Version of package(s) in repository `motion_capture_tracking`:
+
+- upstream repository: https://github.com/IMRCLab/motion_capture_tracking.git
+- release repository: https://github.com/ros2-gbp/motion_capture_tracking-release.git
+- rosdistro version: `1.0.7-1`
+- old version: `1.0.7-1`
+- new version: `1.0.8-1`
+
+Versions of tools used:
+
+- bloom version: `0.14.3`
+- catkin_pkg version: `1.1.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## motion_capture_tracking (rolling) - 1.0.7-1
 
 The packages in the `motion_capture_tracking` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling motion_capture_tracking` on `Tue, 26 May 2026 13:23:34 -0000`
