@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.10...3.50)
 
 project(vrpn_Qt_AutoGUI)
 
@@ -18,8 +18,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 
 # Do moc stuff
 set(QT_MOC_SRC)
-qt4_wrap_cpp(QT_MOC_SRC ${QT_HEADER})
-add_definitions(-DQT_GUI_LIBS -DQT_CORE_LIB -DQT3_SUPPORT)
+qt6_wrap_cpp(QT_MOC_SRC ${QT_HEADER})
 
 
 #######################################
