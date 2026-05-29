@@ -46,7 +46,7 @@ QAnalogContainer::QAnalogContainer(QWidget* widget, const QString& text) {
 
         // Use a spin box without buttons
         QSpinBox* display = new QSpinBox(this);
-        display->setName("vrpn_Qt_ignore");
+        display->setObjectName("vrpn_Qt_ignore");
         display->setButtonSymbols(QAbstractSpinBox::NoButtons);
 
         // Set to the same value and range as the widget
@@ -157,7 +157,7 @@ bool QXmlAutoGUIHandler::startElement(const QString& namespaceURI, const QString
     }
     else if (qName == "Slider") {
         QSlider* widget = new QSlider(Qt::Horizontal);
-        widget->setTickmarks(QSlider::Below);
+        widget->setTickPosition(QSlider::TicksBelow);
 
         ProcessSliderWidget(widget, atts);
     }
@@ -189,7 +189,7 @@ void QXmlAutoGUIHandler::ProcessPushButton(QAbstractButton* widget, const QXmlAt
     // Check attributes
     for (int i = 0; i < atts.count(); i++) {
         if (atts.qName(i) == "Name") {
-            widget->setName(atts.value(i));
+            widget->setObjectName(atts.value(i));
         }
         else if (atts.qName(i) == "Text") {
             widget->setText(atts.value(i));
@@ -206,7 +206,7 @@ void QXmlAutoGUIHandler::ProcessCheckableButton(QAbstractButton* widget, const Q
     // Check attributes
     for (int i = 0; i < atts.count(); i++) {
         if (atts.qName(i) == "Name") {
-            widget->setName(atts.value(i));
+            widget->setObjectName(atts.value(i));
         }
         else if (atts.qName(i) == "Text") {
             widget->setText(atts.value(i));
@@ -231,7 +231,7 @@ void QXmlAutoGUIHandler::ProcessSliderWidget(QAbstractSlider* widget, const QXml
     QString text;
     for (int i = 0; i < atts.count(); i++) {
         if (atts.qName(i) == "Name") {
-            widget->setName(atts.value(i));
+            widget->setObjectName(atts.value(i));
         }
         else if (atts.qName(i) == "Text") {
             text = atts.value(i);
@@ -263,7 +263,7 @@ void QXmlAutoGUIHandler::ProcessSpinBox(QSpinBox* widget, const QXmlAttributes& 
     QString text;
     for (int i = 0; i < atts.count(); i++) {
         if (atts.qName(i) == "Name") {
-            widget->setName(atts.value(i));
+            widget->setObjectName(atts.value(i));
         }
         else if (atts.qName(i) == "Text") {
             text = atts.value(i);
@@ -295,7 +295,7 @@ void QXmlAutoGUIHandler::ProcessDoubleSpinBox(QDoubleSpinBox* widget, const QXml
     QString text;
     for (int i = 0; i < atts.count(); i++) {
         if (atts.qName(i) == "Name") {
-            widget->setName(atts.value(i));
+            widget->setObjectName(atts.value(i));
         }
         else if (atts.qName(i) == "Text") {
             text = atts.value(i);
