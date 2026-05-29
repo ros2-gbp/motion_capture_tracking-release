@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
 		printf("  Product:      %ls\n", cur_dev->product_string);
 		printf("  Release:      %hx\n", cur_dev->release_number);
 		printf("  Interface:    %d\n",  cur_dev->interface_number);
-		printf("  Usage (page): 0x%hx (0x%hx)\n", cur_dev->usage, cur_dev->usage_page);
 		printf("\n");
 		cur_dev = cur_dev->next;
 	}
@@ -108,7 +107,7 @@ int main(int argc, char* argv[])
 	// Set the hid_read() function to be non-blocking.
 	hid_set_nonblocking(handle, 1);
 	
-	// Try to read from the device. There should be no
+	// Try to read from the device. There shoud be no
 	// data here, but execution should not block.
 	res = hid_read(handle, buf, 17);
 
