@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.10...3.50)
 
 #-----------------------------------------------------------------------------
 # XXX Things to make better.
@@ -101,6 +101,11 @@ target_link_libraries(vrpn_server
 	${VRPN_ATMEL_LIBRARY}
 	${VRPN_GPSNMEA_LIBRARY}
 	${VRPNPHANTOMLIB})
+if(APPLE)
+	target_link_libraries(vrpn_server
+		${COREGRAPHICS_FRAMEWORK}
+		${APPLICATIONSERVICES_FRAMEWORK})
+endif()
 set_target_properties(vrpn_server PROPERTIES SOLUTION_FOLDER servers)
 set_property(TARGET
 	vrpn_server
