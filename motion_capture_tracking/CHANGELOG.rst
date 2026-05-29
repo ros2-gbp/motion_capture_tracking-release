@@ -2,6 +2,11 @@
 Changelog for package motion_capture_tracking
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.8 (2026-05-29)
+------------------
+* fix build errors on rolling and lyrical
+* Contributors: Wolfgang Hoenig
+
 1.0.7 (2026-05-26)
 ------------------
 
