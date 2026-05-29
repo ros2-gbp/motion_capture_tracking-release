@@ -33,7 +33,6 @@
 #include <QFile>
 #include <QGroupBox>
 #include <QHBoxLayout>
-#include <QXmlDefaultHandler>
 #include <QXmlInputSource>
 #include <QXmlSimpleReader>
 #include <QVBoxLayout>
@@ -66,10 +65,8 @@ bool QAutoGUI::ParseXML(const QString& fileName) {
     xmlReader.setErrorHandler(&handler);
     
     // Parse the GUI description
-    QXmlInputSource source(file);
-    xmlReader.parse(source);
-
-    return true;
+    QXmlInputSource source(&file);
+    return xmlReader.parse(source);
 }
 
 void QAutoGUI::AddWidget(QWidget* widget) {
