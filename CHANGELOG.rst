@@ -2,6 +2,19 @@
 Changelog for package motion_capture_tracking
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.9 (2026-06-29)
+------------------
+* Optitrack: remove debug prints
+* Contributors: Wolfgang Hoenig
+
+1.0.8 (2026-05-29)
+------------------
+* fix build errors on rolling and lyrical
+* Contributors: Wolfgang Hoenig
+
+1.0.7 (2026-05-26)
+------------------
+
 1.0.6 (2025-06-13)
 ------------------
 * disable optitrack_closed_source by default 

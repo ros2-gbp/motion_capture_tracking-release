@@ -284,6 +284,9 @@ void COutput::PrintGeneralSettings(CRTProtocol* poRTProtocol)
             case CRTProtocol::ModelMiqusVideoColor:
                 printf("  Model: Miqus Video Color   ");
                 break;
+            case CRTProtocol::ModelMiqusVideoColorPlus:
+                printf("  Model: Miqus Video Color Plus  ");
+                break;
             case CRTProtocol::ModelArqusA5:
                 printf("  Model: Arqus A5   ");
                 break;
@@ -339,6 +342,9 @@ void COutput::PrintGeneralSettings(CRTProtocol* poRTProtocol)
             {
                 switch (videoResolution)
                 {
+                    case CRTProtocol::VideoResolution1440p:
+                        printf("  Video Resolution: 1440p\n");
+                        break;
                     case CRTProtocol::VideoResolution1080p :
                         printf("  Video Resolution: 1080p\n");
                         break;
@@ -650,6 +656,11 @@ void COutput::Print6DOFSettings(CRTProtocol* poRTProtocol)
             }
             else
             {
+                if (nMajorVersion > 1 || nMinorVersion > 23)
+                {
+                    std::string enabledAsStr = bodiesSettings[iBody].enabled ? "True" : "False";
+                    printf("  Enabled:               %s\n", enabledAsStr.c_str());
+                }
                 printf("  Color:                 R=%.2X G=%.2X B=%.2X\n", color & 0xff, (color >> 8) & 0xff, (color >> 16) & 0xff);
                 printf("  Bone length tolerance: %f\n", bodiesSettings[iBody].boneLengthTolerance);
                 printf("  Max residual:          %f\n", bodiesSettings[iBody].maxResidual);
