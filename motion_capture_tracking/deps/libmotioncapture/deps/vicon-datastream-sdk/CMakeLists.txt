@@ -6,7 +6,7 @@ set (CMAKE_CXX_STANDARD 14)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-find_package(Boost 1.5 COMPONENTS system thread chrono REQUIRED)
+find_package(Boost 1.5 COMPONENTS thread chrono REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
@@ -36,7 +36,7 @@ add_library(ViconDataStreamSDK_CPP STATIC
 
 target_link_libraries(ViconDataStreamSDK_CPP
   PRIVATE
-    Boost::system
+    Boost::boost
     Boost::thread
     Boost::chrono
     Threads::Threads
