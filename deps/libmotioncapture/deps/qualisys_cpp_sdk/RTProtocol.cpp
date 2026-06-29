@@ -260,7 +260,7 @@ bool CRTProtocol::SetVersion(int nMajorVersion, int nMinorVersion)
             return true;
         }
 
-        if (pResponseStr)
+        if (strlen(pResponseStr))
         {
             sprintf(maErrorStr, "%s.", pResponseStr);
         }
@@ -682,7 +682,7 @@ bool CRTProtocol::SendTrig()
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -710,7 +710,7 @@ bool CRTProtocol::SetQTMEvent(const char* pLabel)
                 return true;
             }
         }
-        if (pResponseStr)
+        if (strlen(pResponseStr))
         {
             sprintf(maErrorStr, "%s.", pResponseStr);
         }
@@ -751,7 +751,7 @@ bool CRTProtocol::TakeControl(const char* pPassword)
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -777,7 +777,7 @@ bool CRTProtocol::ReleaseControl()
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -807,7 +807,7 @@ bool CRTProtocol::NewMeasurement()
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -832,7 +832,7 @@ bool CRTProtocol::CloseMeasurement()
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -855,7 +855,7 @@ bool CRTProtocol::StartCapture()
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -878,7 +878,7 @@ bool CRTProtocol::StartRTOnFile()
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         if (strcmp(pResponseStr, "RT from file already running") == 0)
         {
@@ -905,7 +905,7 @@ bool CRTProtocol::StopCapture()
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -936,7 +936,7 @@ bool CRTProtocol::Calibrate(const bool refine, SCalibration &calibrationResult, 
             }
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -982,7 +982,7 @@ bool CRTProtocol::LoadCapture(const char* pFileName)
 }
 
 
-bool CRTProtocol::SaveCapture(const char* pFileName, bool bOverwrite, char* pNewFileName, int nSizeOfNewFileName)
+bool CRTProtocol::SaveCapture(const char* pFileName, bool bOverwrite, char* pNewFileName, int nSizeOfNewFileName, int nTimeOut)
 {
     char tTemp[100];
     char pResponseStr[256];
@@ -994,7 +994,7 @@ bool CRTProtocol::SaveCapture(const char* pFileName, bool bOverwrite, char* pNew
     {
         sprintf(tTemp, "Save %s%s", pFileName, bOverwrite ? " Overwrite" : "");
 
-        if (SendCommand(tTemp, pResponseStr))
+        if (SendCommand(tTemp, pResponseStr, nTimeOut))
         {
             if (strcmp(pResponseStr, "Measurement saved") == 0)
             {
@@ -1013,7 +1013,7 @@ bool CRTProtocol::SaveCapture(const char* pFileName, bool bOverwrite, char* pNew
                 return true;
             }
         }
-        if (pResponseStr && strlen(pResponseStr) > 0)
+        if (strlen(pResponseStr) > 0)
         {
             sprintf(maErrorStr, "%s.", pResponseStr);
         }
@@ -1046,7 +1046,7 @@ bool CRTProtocol::LoadProject(const char* pFileName)
                 return true;
             }
         }
-        if (pResponseStr)
+        if (strlen(pResponseStr))
         {
             sprintf(maErrorStr, "%s.", pResponseStr);
         }
@@ -1074,7 +1074,7 @@ bool CRTProtocol::Reprocess()
             return true;
         }
     }
-    if (pResponseStr)
+    if (strlen(pResponseStr))
     {
         sprintf(maErrorStr, "%s.", pResponseStr);
     }
@@ -1654,7 +1654,6 @@ bool CRTProtocol::ReadSettings(std::string settingsType, CMarkup &oXML)
     CRTPacket::EPacketType eType;
 
     mvsAnalogDeviceSettings.clear();
-
     auto sendStr = std::string("GetParameters ") + settingsType;
     if (!SendCommand(sendStr.c_str()))
     {
@@ -1662,6 +1661,7 @@ bool CRTProtocol::ReadSettings(std::string settingsType, CMarkup &oXML)
         return false;
     }
 
+retry:
     auto received = Receive(eType, true);
 
     if (received == CNetwork::ResponseType::timeout)
@@ -1679,12 +1679,13 @@ bool CRTProtocol::ReadSettings(std::string settingsType, CMarkup &oXML)
         if (eType == CRTPacket::PacketError)
         {
             sprintf(maErrorStr, "%s.", mpoRTPacket->GetErrorString());
+            return false;
         }
         else
         {
-            sprintf(maErrorStr, "GetParameters %s returned wrong packet type. Got type %d expected type 2.", settingsType.c_str(), eType);
+            goto retry;
+            //sprintf(maErrorStr, "GetParameters %s returned wrong packet type. Got type %d expected type 2.", settingsType.c_str(), eType);
         }
-        return false;
     }
 
     oXML.SetDoc(mpoRTPacket->GetXMLString());
@@ -2236,6 +2237,10 @@ bool CRTProtocol::ReadGeneralSettings()
         {
             sCameraSettings.eModel = ModelMiqusHybrid;
         }
+        else if (tStr == "miqus video color plus")
+        {
+            sCameraSettings.eModel = ModelMiqusVideoColorPlus;
+        }
         else if (tStr == "arqus a5")
         {
             sCameraSettings.eModel = ModelArqusA5;
@@ -2313,7 +2318,11 @@ bool CRTProtocol::ReadGeneralSettings()
         if (oXML.FindChildElem("Video_Resolution"))
         {
             tStr = ToLower(oXML.GetChildData());
-            if (tStr == "1080p")
+            if (tStr == "1440p")
+            {
+                sCameraSettings.eVideoResolution = VideoResolution1440p;
+            }
+            else if (tStr == "1080p")
             {
                 sCameraSettings.eVideoResolution = VideoResolution1080p;
             }
@@ -3209,6 +3218,16 @@ bool CRTProtocol::Read6DOFSettings(bool &bDataAvailable)
                     return false;
                 }
                 s6DOFBodySettings.name = oXML.GetChildData();
+
+                if (mnMajorVersion > 1 || mnMinorVersion > 23)
+                {
+                    if (!oXML.FindChildElem("Enabled"))
+                    {
+                        s6DOFBodySettings.enabled = true;
+                    }
+                    s6DOFBodySettings.enabled = oXML.GetChildData() == "true" ? true : false;
+                }
+
 
                 if (!oXML.FindChildElem("Color"))
                 {
@@ -5456,6 +5475,9 @@ bool CRTProtocol::SetCameraVideoSettings(
     {
         switch (*eVideoResolution)
         {
+            case VideoResolution1440p:
+                oXML.AddElem("Video_Resolution", "1440p");
+                break;
             case VideoResolution1080p:
                 oXML.AddElem("Video_Resolution", "1080p");
                 break;
@@ -5825,7 +5847,6 @@ bool CRTProtocol::SetForceSettings(
     return false;
 } // SetForceSettings
 
-
 bool CRTProtocol::Set6DOFBodySettings(std::vector<SSettings6DOFBody> settings)
 {
     if (mnMajorVersion == 1 && mnMinorVersion < 21)
@@ -5847,6 +5868,7 @@ bool CRTProtocol::Set6DOFBodySettings(std::vector<SSettings6DOFBody> settings)
         oXML.AddElem("Body");
         oXML.IntoElem();
         oXML.AddElem("Name", body.name.c_str());
+        oXML.AddElem("Enabled", body.enabled ? "true" : "false");
         oXML.AddElem("Color");
         oXML.AddAttrib("R", std::to_string(body.color & 0xff).c_str());
         oXML.AddAttrib("G", std::to_string((body.color >> 8) & 0xff).c_str());
