@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.10...3.50)
 
 project(vrpn_Qt_AppExample)
 
@@ -20,8 +20,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 # Do moc stuff
 set(QT_UI_HEADER)
 set(QT_MOC_SRC)
-qt4_wrap_ui(QT_UI_HEADER ${QT_UI})
-qt4_wrap_cpp(QT_MOC_SRC ${QT_HEADER})
+qt6_wrap_ui(QT_UI_HEADER ${QT_UI})
+qt6_wrap_cpp(QT_MOC_SRC ${QT_HEADER})
 set_source_files_properties(${QT_SRC}
 	PROPERTIES
 	OBJECT_DEPENDS
