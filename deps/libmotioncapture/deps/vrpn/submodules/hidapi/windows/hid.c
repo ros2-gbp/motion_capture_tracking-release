@@ -17,7 +17,7 @@
  files located at the root of the source distribution.
  These files may also be found in the public source
  code repository located at:
-        https://github.com/libusb/hidapi .
+        http://github.com/signal11/hidapi .
 ********************************************************/
 
 #include <windows.h>
@@ -36,10 +36,6 @@ typedef LONG NTSTATUS;
 #define _wcsdup wcsdup
 #endif
 
-/* The maximum number of characters that can be passed into the
-   HidD_Get*String() functions without it failing.*/
-#define MAX_STRING_WCHARS 0xFFF
-
 /*#define HIDAPI_USE_DDK*/
 
 #ifdef __cplusplus
@@ -55,7 +51,6 @@ extern "C" {
 	#define HID_OUT_CTL_CODE(id)  \
 		CTL_CODE(FILE_DEVICE_KEYBOARD, (id), METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 	#define IOCTL_HID_GET_FEATURE                   HID_OUT_CTL_CODE(100)
-	#define IOCTL_HID_GET_INPUT_REPORT              HID_OUT_CTL_CODE(104)
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -66,9 +61,6 @@ extern "C" {
 
 
 #include "hidapi.h"
-
-#undef MIN
-#define MIN(x,y) ((x) < (y)? (x): (y))
 
 #ifdef _MSC_VER
 	/* Thanks Microsoft, but I know how to use strncpy(). */
@@ -110,7 +102,6 @@ extern "C" {
 	typedef BOOLEAN (__stdcall *HidD_GetProductString_)(HANDLE handle, PVOID buffer, ULONG buffer_len);
 	typedef BOOLEAN (__stdcall *HidD_SetFeature_)(HANDLE handle, PVOID data, ULONG length);
 	typedef BOOLEAN (__stdcall *HidD_GetFeature_)(HANDLE handle, PVOID data, ULONG length);
-	typedef BOOLEAN (__stdcall *HidD_GetInputReport_)(HANDLE handle, PVOID data, ULONG length);
 	typedef BOOLEAN (__stdcall *HidD_GetIndexedString_)(HANDLE handle, ULONG string_index, PVOID buffer, ULONG buffer_len);
 	typedef BOOLEAN (__stdcall *HidD_GetPreparsedData_)(HANDLE handle, PHIDP_PREPARSED_DATA *preparsed_data);
 	typedef BOOLEAN (__stdcall *HidD_FreePreparsedData_)(PHIDP_PREPARSED_DATA preparsed_data);
@@ -123,7 +114,6 @@ extern "C" {
 	static HidD_GetProductString_ HidD_GetProductString;
 	static HidD_SetFeature_ HidD_SetFeature;
 	static HidD_GetFeature_ HidD_GetFeature;
-	static HidD_GetInputReport_ HidD_GetInputReport;
 	static HidD_GetIndexedString_ HidD_GetIndexedString;
 	static HidD_GetPreparsedData_ HidD_GetPreparsedData;
 	static HidD_FreePreparsedData_ HidD_FreePreparsedData;
@@ -158,7 +148,7 @@ static hid_device *new_hid_device()
 	dev->read_pending = FALSE;
 	dev->read_buf = NULL;
 	memset(&dev->ol, 0, sizeof(dev->ol));
-	dev->ol.hEvent = CreateEvent(NULL, FALSE, FALSE /*initial state f=nonsignaled*/, NULL);
+	dev->ol.hEvent = CreateEvent(NULL, FALSE, FALSE /*inital state f=nonsignaled*/, NULL);
 
 	return dev;
 }
@@ -172,7 +162,7 @@ static void free_hid_device(hid_device *dev)
 	free(dev);
 }
 
-static void register_error(hid_device *dev, const char *op)
+static void register_error(hid_device *device, const char *op)
 {
 	WCHAR *ptr, *msg;
 
@@ -182,7 +172,12 @@ static void register_error(hid_device *dev, const char *op)
 		NULL,
 		GetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+#ifdef _MSC_VER
+		(LPWSTR)&msg, 0/*sz*/,
+#else
+		/* mingw gcc -pedantic warning fix? */
 		(LPVOID)&msg, 0/*sz*/,
+#endif
 		NULL);
 	
 	/* Get rid of the CR and LF that FormatMessage() sticks at the
@@ -198,8 +193,8 @@ static void register_error(hid_device *dev, const char *op)
 
 	/* Store the message off in the Device entry so that
 	   the hid_error() function can pick it up. */
-	LocalFree(dev->last_error_str);
-	dev->last_error_str = msg;
+	LocalFree(device->last_error_str);
+	device->last_error_str = msg;
 }
 
 #ifndef HIDAPI_USE_DDK
@@ -214,7 +209,6 @@ static int lookup_functions()
 		RESOLVE(HidD_GetProductString);
 		RESOLVE(HidD_SetFeature);
 		RESOLVE(HidD_GetFeature);
-		RESOLVE(HidD_GetInputReport);
 		RESOLVE(HidD_GetIndexedString);
 		RESOLVE(HidD_GetPreparsedData);
 		RESOLVE(HidD_FreePreparsedData);
@@ -229,11 +223,13 @@ static int lookup_functions()
 }
 #endif
 
-static HANDLE open_device(const char *path, BOOL open_rw)
+static HANDLE open_device(const char *path, BOOL enumerate)
 {
 	HANDLE handle;
-	DWORD desired_access = (open_rw)? (GENERIC_WRITE | GENERIC_READ): 0;
-	DWORD share_mode = FILE_SHARE_READ|FILE_SHARE_WRITE;
+	DWORD desired_access = (enumerate)? 0: (GENERIC_WRITE | GENERIC_READ);
+	DWORD share_mode = (enumerate)?
+	                      FILE_SHARE_READ|FILE_SHARE_WRITE:
+	                      FILE_SHARE_READ;
 
 	handle = CreateFileA(path,
 		desired_access,
@@ -242,6 +238,19 @@ static HANDLE open_device(const char *path, BOOL open_rw)
 		OPEN_EXISTING,
 		FILE_FLAG_OVERLAPPED,/*FILE_ATTRIBUTE_NORMAL,*/
 		0);
+
+	if (!(enumerate) && handle == INVALID_HANDLE_VALUE) {
+		/* Couldn't open the device. Some devices must be opened
+		   with write sharing enabled (even though they are only
+		   opened once), so try it here. */
+		handle = CreateFileA(path,
+			desired_access,
+			share_mode|FILE_SHARE_WRITE,
+			NULL,
+			OPEN_EXISTING,
+			FILE_FLAG_OVERLAPPED,/*FILE_ATTRIBUTE_NORMAL,*/
+			0);
+	}
 
 	return handle;
 }
@@ -362,9 +371,7 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 			if (!res)
 				goto cont;
 
-			if ((strcmp(driver_name, "HIDClass") == 0) ||
-				(strcmp(driver_name, "Mouse") == 0) ||
-				(strcmp(driver_name, "Keyboard") == 0)) {
+			if (strcmp(driver_name, "HIDClass") == 0) {
 				/* See if there's a driver bound. */
 				res = SetupDiGetDeviceRegistryPropertyA(device_info_set, &devinfo_data,
 				           SPDRP_DRIVER, NULL, (PBYTE)driver_name, sizeof(driver_name), NULL);
@@ -376,7 +383,7 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 		//wprintf(L"HandleName: %s\n", device_interface_detail_data->DevicePath);
 
 		/* Open a handle to the device */
-		write_handle = open_device(device_interface_detail_data->DevicePath, FALSE);
+		write_handle = open_device(device_interface_detail_data->DevicePath, TRUE);
 
 		/* Check validity of write_handle. */
 		if (write_handle == INVALID_HANDLE_VALUE) {
@@ -441,7 +448,6 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 				cur_dev->path = NULL;
 
 			/* Serial Number */
-			wstr[0]= 0x0000;
 			res = HidD_GetSerialNumberString(write_handle, wstr, sizeof(wstr));
 			wstr[WSTR_LEN-1] = 0x0000;
 			if (res) {
@@ -449,7 +455,6 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 			}
 
 			/* Manufacturer String */
-			wstr[0]= 0x0000;
 			res = HidD_GetManufacturerString(write_handle, wstr, sizeof(wstr));
 			wstr[WSTR_LEN-1] = 0x0000;
 			if (res) {
@@ -457,7 +462,6 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 			}
 
 			/* Product String */
-			wstr[0]= 0x0000;
 			res = HidD_GetProductString(write_handle, wstr, sizeof(wstr));
 			wstr[WSTR_LEN-1] = 0x0000;
 			if (res) {
@@ -575,23 +579,13 @@ HID_API_EXPORT hid_device * HID_API_CALL hid_open_path(const char *path)
 	dev = new_hid_device();
 
 	/* Open a handle to the device */
-	dev->device_handle = open_device(path, TRUE);
+	dev->device_handle = open_device(path, FALSE);
 
 	/* Check validity of write_handle. */
 	if (dev->device_handle == INVALID_HANDLE_VALUE) {
-		/* System devices, such as keyboards and mice, cannot be opened in
-		   read-write mode, because the system takes exclusive control over
-		   them.  This is to prevent keyloggers.  However, feature reports
-		   can still be sent and received.  Retry opening the device, but
-		   without read/write access. */
-		dev->device_handle = open_device(path, FALSE);
-
-		/* Check the validity of the limited device_handle. */
-		if (dev->device_handle == INVALID_HANDLE_VALUE) {
-			/* Unable to open the device, even without read-write mode. */
-			register_error(dev, "CreateFile");
-			goto err;
-		}
+		/* Unable to open the device. */
+		register_error(dev, "CreateFile");
+		goto err;
 	}
 
 	/* Set the Input Report buffer size to 64 reports. */
@@ -654,7 +648,7 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 		length = dev->output_report_length;
 	}
 
-	res = WriteFile(dev->device_handle, buf, (DWORD) length, NULL, &ol);
+	res = WriteFile(dev->device_handle, buf, length, NULL, &ol);
 	
 	if (!res) {
 		if (GetLastError() != ERROR_IO_PENDING) {
@@ -697,7 +691,7 @@ int HID_API_EXPORT HID_API_CALL hid_read_timeout(hid_device *dev, unsigned char 
 		dev->read_pending = TRUE;
 		memset(dev->read_buf, 0, dev->input_report_length);
 		ResetEvent(ev);
-		res = ReadFile(dev->device_handle, dev->read_buf, (DWORD) dev->input_report_length, &bytes_read, &dev->ol);
+		res = ReadFile(dev->device_handle, dev->read_buf, dev->input_report_length, &bytes_read, &dev->ol);
 		
 		if (!res) {
 			if (GetLastError() != ERROR_IO_PENDING) {
@@ -751,7 +745,7 @@ end_of_function:
 		return -1;
 	}
 	
-	return (int) copy_len;
+	return copy_len;
 }
 
 int HID_API_EXPORT HID_API_CALL hid_read(hid_device *dev, unsigned char *data, size_t length)
@@ -767,13 +761,13 @@ int HID_API_EXPORT HID_API_CALL hid_set_nonblocking(hid_device *dev, int nonbloc
 
 int HID_API_EXPORT HID_API_CALL hid_send_feature_report(hid_device *dev, const unsigned char *data, size_t length)
 {
-	BOOL res = HidD_SetFeature(dev->device_handle, (PVOID)data, (DWORD) length);
+	BOOL res = HidD_SetFeature(dev->device_handle, (PVOID)data, length);
 	if (!res) {
 		register_error(dev, "HidD_SetFeature");
 		return -1;
 	}
 
-	return (int) length;
+	return length;
 }
 
 
@@ -795,8 +789,8 @@ int HID_API_EXPORT HID_API_CALL hid_get_feature_report(hid_device *dev, unsigned
 
 	res = DeviceIoControl(dev->device_handle,
 		IOCTL_HID_GET_FEATURE,
-		data, (DWORD) length,
-		data, (DWORD) length,
+		data, length,
+		data, length,
 		&bytes_returned, &ol);
 
 	if (!res) {
@@ -825,55 +819,6 @@ int HID_API_EXPORT HID_API_CALL hid_get_feature_report(hid_device *dev, unsigned
 #endif
 }
 
-
-int HID_API_EXPORT HID_API_CALL hid_get_input_report(hid_device *dev, unsigned char *data, size_t length)
-{
-	BOOL res;
-#if 0
-	res = HidD_GetInputReport(dev->device_handle, data, length);
-	if (!res) {
-		register_error(dev, "HidD_GetInputReport");
-		return -1;
-	}
-	return length;
-#else
-	DWORD bytes_returned;
-
-	OVERLAPPED ol;
-	memset(&ol, 0, sizeof(ol));
-
-	res = DeviceIoControl(dev->device_handle,
-		IOCTL_HID_GET_INPUT_REPORT,
-		data, (DWORD) length,
-		data, (DWORD) length,
-		&bytes_returned, &ol);
-
-	if (!res) {
-		if (GetLastError() != ERROR_IO_PENDING) {
-			/* DeviceIoControl() failed. Return error. */
-			register_error(dev, "Send Input Report DeviceIoControl");
-			return -1;
-		}
-	}
-
-	/* Wait here until the write is done. This makes
-	   hid_get_feature_report() synchronous. */
-	res = GetOverlappedResult(dev->device_handle, &ol, &bytes_returned, TRUE/*wait*/);
-	if (!res) {
-		/* The operation failed. */
-		register_error(dev, "Send Input Report GetOverLappedResult");
-		return -1;
-	}
-
-	/* bytes_returned does not include the first byte which contains the
-	   report ID. The data buffer actually contains one more byte than
-	   bytes_returned. */
-	bytes_returned++;
-
-	return bytes_returned;
-#endif
-}
-
 void HID_API_EXPORT HID_API_CALL hid_close(hid_device *dev)
 {
 	if (!dev)
@@ -886,7 +831,7 @@ int HID_API_EXPORT_CALL HID_API_CALL hid_get_manufacturer_string(hid_device *dev
 {
 	BOOL res;
 
-	res = HidD_GetManufacturerString(dev->device_handle, string, sizeof(wchar_t) * (DWORD) MIN(maxlen, MAX_STRING_WCHARS));
+	res = HidD_GetManufacturerString(dev->device_handle, string, sizeof(wchar_t) * maxlen);
 	if (!res) {
 		register_error(dev, "HidD_GetManufacturerString");
 		return -1;
@@ -899,7 +844,7 @@ int HID_API_EXPORT_CALL HID_API_CALL hid_get_product_string(hid_device *dev, wch
 {
 	BOOL res;
 
-	res = HidD_GetProductString(dev->device_handle, string, sizeof(wchar_t) * (DWORD) MIN(maxlen, MAX_STRING_WCHARS));
+	res = HidD_GetProductString(dev->device_handle, string, sizeof(wchar_t) * maxlen);
 	if (!res) {
 		register_error(dev, "HidD_GetProductString");
 		return -1;
@@ -912,7 +857,7 @@ int HID_API_EXPORT_CALL HID_API_CALL hid_get_serial_number_string(hid_device *de
 {
 	BOOL res;
 
-	res = HidD_GetSerialNumberString(dev->device_handle, string, sizeof(wchar_t) * (DWORD) MIN(maxlen, MAX_STRING_WCHARS));
+	res = HidD_GetSerialNumberString(dev->device_handle, string, sizeof(wchar_t) * maxlen);
 	if (!res) {
 		register_error(dev, "HidD_GetSerialNumberString");
 		return -1;
@@ -925,7 +870,7 @@ int HID_API_EXPORT_CALL HID_API_CALL hid_get_indexed_string(hid_device *dev, int
 {
 	BOOL res;
 
-	res = HidD_GetIndexedString(dev->device_handle, string_index, string, sizeof(wchar_t) * (DWORD) MIN(maxlen, MAX_STRING_WCHARS));
+	res = HidD_GetIndexedString(dev->device_handle, string_index, string, sizeof(wchar_t) * maxlen);
 	if (!res) {
 		register_error(dev, "HidD_GetIndexedString");
 		return -1;
@@ -937,14 +882,10 @@ int HID_API_EXPORT_CALL HID_API_CALL hid_get_indexed_string(hid_device *dev, int
 
 HID_API_EXPORT const wchar_t * HID_API_CALL  hid_error(hid_device *dev)
 {
-	if (dev) {
-		if (dev->last_error_str == NULL)
-			return L"Success";
-		return (wchar_t*)dev->last_error_str;
+	if (!dev) {
+		return NULL;
 	}
-
-	// Global error messages are not (yet) implemented on Windows.
-	return L"hid_error for global errors is not implemented yet";
+	return (wchar_t*)dev->last_error_str;
 }
 
 
